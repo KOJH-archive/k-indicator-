@@ -130,6 +130,34 @@
                             <span class="kpi-trend" id="export-period">대상 기간: -</span>
                         </div>
                     </div>
+                    
+                    <div class="kpi-card" id="kpi-housing-index">
+                        <div class="kpi-header">
+                            <span class="kpi-title">주택매매가격지수 (KB)</span>
+                            <div class="kpi-icon housing"><i data-lucide="home"></i></div>
+                        </div>
+                        <div class="kpi-value-area">
+                            <span class="kpi-value">-</span>
+                            <span class="kpi-unit">p</span>
+                        </div>
+                        <div class="kpi-footer">
+                            <span class="kpi-trend" id="housing-period">대상 기간: -</span>
+                        </div>
+                    </div>
+                    
+                    <div class="kpi-card" id="kpi-unemployment-rate">
+                        <div class="kpi-header">
+                            <span class="kpi-title">실업률</span>
+                            <div class="kpi-icon unemp"><i data-lucide="users"></i></div>
+                        </div>
+                        <div class="kpi-value-area">
+                            <span class="kpi-value">-</span>
+                            <span class="kpi-unit">%</span>
+                        </div>
+                        <div class="kpi-footer">
+                            <span class="kpi-trend" id="unemp-period">대상 기간: -</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Charts Section -->
@@ -141,9 +169,18 @@
                         </div>
                     </div>
                     <div class="chart-container card">
-                        <h3>수출증가율 및 무역수지 추이</h3>
+                        <div class="chart-header-flex" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                            <h3 style="margin:0;">수출증가율 및 무역수지 추이</h3>
+                            <div id="negativeExportAlert" style="font-size: 0.8rem; color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 4px 8px; border-radius: 4px; display: none;">마이너스 성장 기간 분석중...</div>
+                        </div>
                         <div class="canvas-wrapper">
                             <canvas id="tradeChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container card">
+                        <h3>주택매매가격지수 및 실업률 추이</h3>
+                        <div class="canvas-wrapper">
+                            <canvas id="extraChart"></canvas>
                         </div>
                     </div>
                 </div>

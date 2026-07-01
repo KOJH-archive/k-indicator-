@@ -155,6 +155,14 @@ def get_article_details(article_id: int):
     conn.close()
     return article
 
+@app.get("/api/download")
+def download_file(path: str):
+    """Serve local downloaded files to the frontend."""
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="File not found")
+    # Return as an attachment so browser downloads it
+    return FileResponse(path, filename=os.path.basename(path))
+
 @app.delete("/api/articles/{article_id}")
 def delete_article(article_id: int):
     """Delete article from database and its downloaded files."""

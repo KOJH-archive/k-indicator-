@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let articlesData = [];
     let cpiChartInstance = null;
     let tradeChartInstance = null;
+    let extraChartInstance = null;
     let selectedFilter = "all";
     let searchQuery = "";
 
@@ -205,7 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             // Find latest value for each indicator
-            const keys = ["base_rate", "cpi_yoy", "trade_balance", "export_growth"];
+            const keys = ["base_rate", "cpi_yoy", "trade_balance", "export_growth", "housing_index", "unemployment_rate"];
             keys.forEach(k => {
                 const card = document.getElementById(`kpi-${k.replace('_', '-')}`);
                 const valElem = card.querySelector(".kpi-value");
@@ -242,7 +243,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 base_rate: {},
                 cpi_yoy: {},
                 trade_balance: {},
-                export_growth: {}
+                export_growth: {},
+                housing_index: {},
+                unemployment_rate: {}
             };
 
             data.forEach(item => {
@@ -267,6 +270,48 @@ document.addEventListener("DOMContentLoaded", () => {
             const cpiYoYs = sortedPeriods.map(p => values.cpi_yoy[p] !== undefined ? values.cpi_yoy[p] : null);
             const tradeBalances = sortedPeriods.map(p => values.trade_balance[p] !== undefined ? values.trade_balance[p] : null);
             const exportGrowths = sortedPeriods.map(p => values.export_growth[p] !== undefined ? values.export_growth[p] : null);
+            const housingIndices = sortedPeriods.map(p => values.housing_index[p] !== undefined ? values.housing_index[p] : null);
+            const unemploymentRates = sortedPeriods.map(p => values.unemployment_rate[p] !== undefined ? values.unemployment_rate[p] : null);
+
+            // Calculate negative export growth periods
+            let negativePeriods = [];
+            let inNegative = false;
+            let startPeriod = null;
+            
+            for (let i = 0; i < exportGrowths.length; i++) {
+                const val = exportGrowths[i];
+                if (val !== null && val < 0) {
+                    if (!inNegative) {
+                        inNegative = true;
+                        startPeriod = sortedPeriods[i];
+                    }
+                } else {
+                    if (inNegative) {
+                        inNegative = false;
+                        if (startPeriod === sortedPeriods[i-1]) {
+                            negativePeriods.push(startPeriod);
+                        } else {
+                            negativePeriods.push(`${startPeriod} ~ ${sortedPeriods[i-1]}`);
+                        }
+                    }
+                }
+            }
+            if (inNegative) {
+                const endP = sortedPeriods[exportGrowths.length - 1];
+                if (startPeriod === endP) negativePeriods.push(startPeriod);
+                else negativePeriods.push(`${startPeriod} ~ ${endP}`);
+            }
+            
+            const alertBox = document.getElementById("negativeExportAlert");
+            if (alertBox) {
+                if (negativePeriods.length > 0) {
+                    const recent = negativePeriods.slice(-3).reverse().join(', ');
+                    alertBox.innerHTML = `<strong>최근 마이너스 성장기:</strong> ${recent}`;
+                    alertBox.style.display = "block";
+                } else {
+                    alertBox.style.display = "none";
+                }
+            }
 
             // 1. Render BOK Interest Rate and CPI Chart (Dual Axis)
             if (cpiChartInstance) cpiChartInstance.destroy();
@@ -358,7 +403,15 @@ document.addEventListener("DOMContentLoaded", () => {
                             backgroundColor: "transparent",
                             yAxisID: "y1",
                             tension: 0.3,
-                            spanGaps: true
+                            spanGaps: true,
+                            fill: {
+                                target: { value: 0 },
+                                below: 'rgba(239, 68, 68, 0.2)',
+                                above: 'transparent'
+                            },
+                            segment: {
+                                borderColor: ctx => ctx.p0.parsed.y < 0 && ctx.p1.parsed.y < 0 ? 'rgba(239, 68, 68, 1)' : '#f97316'
+                            }
                         }
                     ]
                 },
@@ -385,6 +438,68 @@ document.addEventListener("DOMContentLoaded", () => {
                             grid: { drawOnChartArea: false },
                             ticks: { color: textColor },
                             title: { display: true, text: "수출증가율 (%)", color: textColor }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: textColor } }
+                    }
+                }
+            });
+
+            // 3. Render Housing Price Index and Unemployment Rate Chart (Dual Axis)
+            if (extraChartInstance) extraChartInstance.destroy();
+            const ctxExtra = document.getElementById("extraChart").getContext("2d");
+            
+            extraChartInstance = new Chart(ctxExtra, {
+                type: "line",
+                data: {
+                    labels: sortedPeriods,
+                    datasets: [
+                        {
+                            label: "주택매매가격지수 (KB)",
+                            data: housingIndices,
+                            borderColor: "#ec4899", // pink
+                            backgroundColor: "rgba(236, 72, 153, 0.1)",
+                            yAxisID: "y",
+                            tension: 0.3,
+                            fill: true,
+                            spanGaps: true
+                        },
+                        {
+                            label: "실업률 (%)",
+                            data: unemploymentRates,
+                            borderColor: "#eab308", // yellow
+                            backgroundColor: "transparent",
+                            yAxisID: "y1",
+                            tension: 0.3,
+                            borderDash: [5, 5],
+                            spanGaps: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: textColor }
+                        },
+                        y: {
+                            type: "linear",
+                            display: true,
+                            position: "left",
+                            grid: { color: gridColor },
+                            ticks: { color: textColor },
+                            title: { display: true, text: "주택매매가격지수", color: textColor }
+                        },
+                        y1: {
+                            type: "linear",
+                            display: true,
+                            position: "right",
+                            grid: { drawOnChartArea: false },
+                            ticks: { color: textColor },
+                            title: { display: true, text: "실업률 (%)", color: textColor }
                         }
                     },
                     plugins: {
@@ -474,7 +589,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const icon = att.filename.toLowerCase().endswith && att.filename.toLowerCase().endswith("pdf") ? "file" : "file-text";
                 const fileLink = document.createElement("a");
                 fileLink.className = "attachment-badge";
-                fileLink.href = `file:///${att.local_path}`;
+                fileLink.href = `${API_BASE}/api/download?path=${encodeURIComponent(att.local_path)}`;
                 fileLink.target = "_blank";
                 fileLink.innerHTML = `<i data-lucide="file" style="width:12px; height:12px;"></i> ${att.original_name.substring(0, 15)}...`;
                 wrapper.appendChild(fileLink);
@@ -664,7 +779,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 modalAttachmentsList.innerHTML = "";
                 art.attachments.forEach(att => {
                     const a = document.createElement("a");
-                    a.href = `file:///${att.local_path}`;
+                    a.href = `${API_BASE}/api/download?path=${encodeURIComponent(att.local_path)}`;
                     a.className = "attachment-badge";
                     a.target = "_blank";
                     a.innerHTML = `<i data-lucide="download" style="width:12px; height:12px;"></i> ${att.original_name}`;
