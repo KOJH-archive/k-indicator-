@@ -283,7 +283,8 @@ document.addEventListener("DOMContentLoaded", () => {
                             backgroundColor: "rgba(168, 85, 247, 0.1)",
                             yAxisID: "y",
                             tension: 0.3,
-                            fill: true
+                            fill: true,
+                            spanGaps: true
                         },
                         {
                             label: "한국은행 기준금리 (%)",
@@ -356,7 +357,8 @@ document.addEventListener("DOMContentLoaded", () => {
                             borderColor: "#f97316",
                             backgroundColor: "transparent",
                             yAxisID: "y1",
-                            tension: 0.3
+                            tension: 0.3,
+                            spanGaps: true
                         }
                     ]
                 },
