@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Database and downloads
+data/downloads/
+data/database.sqlite
+*.db
+*.sqlite3
+
+# Test files
+test_*.html
+test_*.txt
+
+# IDE/OS files
+.vscode/
+.idea/
+.DS_Store
